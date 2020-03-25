@@ -1,7 +1,8 @@
 (defpackage cl-nlp-100
   (:use :cl :cl-ppcre)
   ;; ここ最高にゴミでは。
-  (:export #:p-0 #:p-1 #:p-2 #:p-3 #:p-4 #:p-5 #:p-6 #:p-7 #:p-8 #:p-9 #:p-10
+  (:export #:p-0 #:p-1 #:p-2 #:p-3 #:p-4 #:p-5 #:p-6-1 #:p-6-2 #:p-6-3 #:p-6-4
+		   #:p-7 #:p-8 #:p-9 #:p-9-m #:p-10
 		   #:p-11 #:p-12 #:p-13 #:p-14 #:p-15 #:p-16 #:p-17 #:p-18 #:p-19 #:p-20
 		   #:p-21 #:p-22 #:p-23 #:p-24 #:p-25 #:p-26 #:p-27 #:p-28 #:p-29 #:p-30
 		   #:p-31 #:p-32 #:p-33 #:p-34 #:p-35 #:p-36 #:p-37 #:p-38 #:p-39 #:p-40
@@ -37,6 +38,33 @@
   (cond ((not (or (zerop n) (zerop (length lst))))
 		 (drop (cdr lst) (1- n)))
 		(t lst)))
+
+(defun to-str (x)
+  (if (stringp x) x (write-to-string x)))
+
+(defun del-nth (n lst)
+  (cond ((zerop n)
+		 (cdr lst))
+		((<= (length lst) n)
+		 lst)
+		(t
+		 (append (take lst n) (drop lst (1+ n))))))
+
+(defun shuffle-lst (lst)
+  (labels ((sf (lst)
+			 (if (zerop (length lst))
+				 lst
+				 (let ((del-pos (random (length lst))))
+				   `(,(nth del-pos lst)
+					  ,@(sf (del-nth del-pos lst)))))))
+	(sf lst)))
+
+(defun part-shuffle-lst (lst begin end)
+  (let ((begin-before-target (take lst begin))
+		(target-after-end (drop lst end)))
+	`(,@begin-before-target
+		,@(shuffle-lst (take (drop lst begin) (- end begin)))
+		,@target-after-end)))
 
 ;;; Problems
 ;;; 00
@@ -86,3 +114,75 @@
 					  (cons (take lst n) (n-gram (drop lst 1) n)))
 					 (t nil))))
 	  (n-gram nodes num))))
+
+;;; 06
+(defun p-6-1 (a b)
+  (let ((a-lst (p-5 a 2 nil))
+		(b-lst (p-5 b 2 nil)))
+	(remove-duplicates (append a-lst b-lst)
+					   :test #'equal)))
+
+(defun p-6-2 (a b)
+  (let* ((a-lst (p-5 a 2 nil))
+		 (b-lst (p-5 b 2 nil))
+		 (ab-lst (append a-lst b-lst)))
+	(remove-duplicates
+	 (remove-if-not #'(lambda (x)
+						(<= 2 (count x ab-lst :test #'equal)))
+					ab-lst)
+	 :test #'equal)))
+
+(defun p-6-3 (a b)
+  (let ((a-lst (remove-duplicates (p-5 a 2 nil)))
+		(b-lst (remove-duplicates (p-5 b 2 nil))))
+	(remove-duplicates
+	 (remove-if #'(lambda (x) (find x b-lst :test #'equal)) a-lst))))
+
+(defun p-6-4 (a b tgt)
+  (and (find tgt (p-5 a 2 nil) :test #'equal)
+	   (find tgt (p-5 b 2 nil) :test #'equal)))
+
+;;; 07
+(defun p-7 (x y z)
+  (let ((x-to-str (to-str x))
+		(y-to-str (to-str y))
+		(z-to-str (to-str z)))
+	(format nil "~A時の~Aは~A" x-to-str y-to-str z-to-str)))
+
+;;; 08
+(defun p-8 (str)
+  (let ((chrs (concatenate 'list str)))
+	(format nil "~{~A~}" (mapcar #'(lambda (x) (if (and (<= 97 (char-code x))
+														(<= (char-code x) 122))
+												   (code-char (- 219 (char-code x)))
+												   x))
+								 chrs))))
+
+;;; 09
+(defun p-9 (str)
+  (let* ((words (text->words str)))
+	(format nil "~{~A ~}"
+			(mapcar #'(lambda (x)
+						(if (<= (length x) 4)
+							x
+							(format nil "~{~A~}"
+									(part-shuffle-lst (string->string-one x)
+											  1
+											  (1- (length (string->string-one x)))))))
+					words))))
+
+;; (defun p-9-m (str)
+;;   (let* ((words (text->words str))
+;; 		 (template-lst (mapcar #'(lambda (x) (if (< 4 (length x))
+;; 												 (intern "replace")
+;; 												 x))
+;; 							   words))
+;; 		 (shuffle-replace-lst (shuffle-lst (remove-if-not #'(lambda (x) (< 4 (length x))) words))))
+;; 	(format nil "~{~A ~}" (reverse (reduce #'(lambda (res x)
+;; 											   (cond ((stringp x)
+;; 													  (cons x res))
+;; 													 (t (let ((first (car shuffle-replace-lst)))
+;; 														  (setf shuffle-replace-lst (del-nth 0 shuffle-replace-lst))
+;; 														  (cons first res)))))
+;; 										   template-lst
+;; 										   :initial-value '())))))

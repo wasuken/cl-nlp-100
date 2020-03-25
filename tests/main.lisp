@@ -1,6 +1,7 @@
 (defpackage cl-nlp-100/tests/main
   (:use :cl
         :cl-nlp-100
+		:cl-ppcre
         :rove))
 (in-package :cl-nlp-100/tests/main)
 
@@ -68,4 +69,37 @@
 						   (" " "a") ("a" "n") ("n" " ") (" " "N")
 						   ("N" "L") ("L" "P") ("P" "e") ("e" "r"))))
 	  (ok (equal (cl-nlp-100:p-5 str 2 t) expected-word))
-	  (ok (equal (cl-nlp-100:p-5 str 2 nil) expected-chr)))))
+	  (ok (equal (cl-nlp-100:p-5 str 2 nil) expected-chr))))
+  (testing "problem 06"
+	(let ((str-a "paraparaparadise")
+		  (str-b "paragraph")
+		  (exp-1 '(("a" "d") ("d" "i") ("i" "s") ("s" "e") ("p" "a") ("a" "r") ("a" "g")
+				   ("g" "r") ("r" "a") ("a" "p") ("p" "h")))
+		  (exp-2 '(("p" "a") ("a" "r") ("r" "a") ("a" "p")))
+		  (exp-3 '(("a" "d") ("d" "i") ("i" "s") ("s" "e")) ))
+	  (ok (equal (cl-nlp-100:p-6-1 str-a str-b)
+				 exp-1))
+	  (ok (equal (cl-nlp-100:p-6-2 str-a str-b)
+				 exp-2))
+	  (ok (equal (cl-nlp-100:p-6-3 str-a str-b)
+				 exp-3))
+	  (ok (not (cl-nlp-100:p-6-4 str-a str-b '("s" "e"))))))
+  (testing "problem 07"
+	(let ((x 12)
+		  (y "気温")
+		  (z 22.4)
+		  (expected "12時の気温は22.4"))
+	  (ok (equal (cl-nlp-100:p-7 x y z) expected))))
+  (testing "problem 08"
+	(let ((input-and-expected "hogezzZZほげfuga"))
+	  (ok (equal (cl-nlp-100:p-8 (cl-nlp-100:p-8 input-and-expected))
+				 input-and-expected))))
+  (testing "problem 09"
+	(let ((input "I couldn't believe that I could actually understand what I was reading : the phenomenal power of the human mind .")
+		  (expected-regex "I .* that I .* what I was .* : the .* of the .* mind"))
+	  (ok (ppcre:scan-to-strings expected-regex (cl-nlp-100:p-9 input)))))
+  ;; (testing "problem 09 勘違い"
+  ;; 	(let ((input "I couldn't believe that I could actually understand what I was reading : the phenomenal power of the human mind .")
+  ;; 		  (expected-regex "I .* that I .* what I was .* : the .* of the .* mind"))
+  ;; 	  (ok (ppcre:scan-to-strings expected-regex (cl-nlp-100:p-9-m input)))))
+  )
