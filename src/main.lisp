@@ -12,7 +12,9 @@
 		   #:p-71 #:p-72 #:p-73 #:p-74 #:p-75 #:p-76 #:p-77 #:p-78 #:p-79 #:p-80
 		   #:p-81 #:p-82 #:p-83 #:p-84 #:p-85 #:p-86 #:p-87 #:p-88 #:p-89 #:p-90
 		   #:p-91 #:p-92 #:p-93 #:p-94 #:p-95 #:p-96 #:p-97 #:p-98 #:p-99
-		   #:p-100))
+		   #:p-100
+		   #:read-lines
+		   #:slurp))
 (in-package :cl-nlp-100)
 
 ;;; Common
@@ -66,7 +68,19 @@
 		,@(shuffle-lst (take (drop lst begin) (- end begin)))
 		,@target-after-end)))
 
+(defun read-lines (path)
+  (with-open-file (s path)
+	(loop for line = (read-line s nil)
+	   while line
+	   collect line)))
+
+(defun slurp (path)
+  (format nil "~{~A~^~&~}" (read-lines path)))
+
 ;;; Problems
+
+;;; act 1
+
 ;;; 00
 (defun p-0 (str)
   (labels ((r (lst)
@@ -186,3 +200,36 @@
 ;; 														  (cons first res)))))
 ;; 										   template-lst
 ;; 										   :initial-value '())))))
+
+;;; act 2
+
+;;; 10
+(defun p-10 (path)
+  (length (read-lines path)))
+
+;;; 11
+(defun p-11 (path)
+  (format nil "~{~A~^~%~}" (mapcar #'(lambda (x)
+									   (ppcre:regex-replace-all "\\t" x " "))
+								   (read-lines path))))
+
+;;; 12
+(defun p-12 (path o-path-1 o-path-2)
+  (let* ((two-lst (mapcar #'(lambda (x) (let ((sp (ppcre:split "\\t" x)))
+										  (cons (car sp) (car (cdr sp)))))
+						  (read-lines path))))
+	(with-open-file (s o-path-1 :direction :output)
+	  (format s  "~{~A~^~%~}" (mapcar #'car two-lst)))
+	(with-open-file (s o-path-2 :direction :output)
+	  (format s  "~{~A~^~%~}" (mapcar #'cdr two-lst)))))
+
+;;; 13
+(defun p-13 (o-path sep i-path-1 i-path-2)
+  (with-open-file (s o-path :direction :output)
+	(format s "~{~A~^~%~}" (mapcar #'(lambda (x y)
+									   (concatenate 'string x sep y))
+								   (read-lines i-path-1)
+								   (read-lines i-path-2)))))
+
+(defun p-14 (path n)
+  (format nil "~{~A~^~&~}" (take (read-lines path) n)))

@@ -11,6 +11,11 @@
 		(b-key-value-lst (maphash #'(lambda (k v) (cons k v)) b)))
 	(equal a-key-value-lst b-key-value-lst)))
 
+(defun clean-files (&rest files)
+  (dolist (file files)
+	(when (probe-file file)
+	  (delete-file (probe-file file)))))
+
 ;; NOTE: To run this test file, execute `(asdf:test-system :cl-nlp-100)' in your Lisp.
 
 (deftest act-1
@@ -102,4 +107,34 @@
   ;; 	(let ((input "I couldn't believe that I could actually understand what I was reading : the phenomenal power of the human mind .")
   ;; 		  (expected-regex "I .* that I .* what I was .* : the .* of the .* mind"))
   ;; 	  (ok (ppcre:scan-to-strings expected-regex (cl-nlp-100:p-9-m input)))))
+  )
+
+(deftest act-2
+  (let ((filepath "./files/hightemp.txt"))
+	(testing "problem 10"
+	  (ok (= (cl-nlp-100:p-10 filepath) 24)))
+	(testing "problem 11"
+	  (ok (string= (cl-nlp-100:p-11 filepath)
+				   (cl-nlp-100:slurp "./files/hightemp_tab_to_space.txt"))))
+	(testing "problem 12"
+	  (clean-files "./files/col_1.txt" "./files/col_2.txt")
+	  (cl-nlp-100:p-12 filepath "./files/col_1.txt" "./files/col_2.txt")
+	  (ok (string= (cl-nlp-100:slurp "./files/col_1.txt")
+				   (cl-nlp-100:slurp "./files/cmd_cut_1.txt")))
+	  (ok (string= (cl-nlp-100:slurp "./files/col_2.txt")
+				   (cl-nlp-100:slurp "./files/cmd_cut_2.txt")))
+	  (clean-files "./files/col_1.txt" "./files/col_2.txt"))
+	(testing "problem 13"
+	  (clean-files "./files/col1_2_merged.txt")
+	  (cl-nlp-100:p-13 "./files/col1_2_merged.txt"
+					   "	"
+					   "./files/cmd_cut_1.txt"
+					   "./files/cmd_cut_2.txt")
+	  (ok (string= (cl-nlp-100:slurp "./files/col1_2_merged.txt")
+				   (cl-nlp-100:slurp "./files/cmd_col1_2_merged.txt")))
+	  (clean-files "./files/col1_2_merged.txt"))
+	(testing "problem 14"
+	  (ok (string= (cl-nlp-100:p-14 "./files/hightemp.txt" 3)
+				   (cl-nlp-100:slurp "./files/cmd_head3.txt"))))
+	)
   )
