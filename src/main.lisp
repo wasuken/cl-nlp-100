@@ -1,5 +1,5 @@
 (defpackage cl-nlp-100
-  (:use :cl :cl-ppcre)
+  (:use :cl :cl-ppcre :parse-float)
   ;; ここ最高にゴミでは。
   (:export #:p-0 #:p-1 #:p-2 #:p-3 #:p-4 #:p-5 #:p-6-1 #:p-6-2 #:p-6-3 #:p-6-4
 		   #:p-7 #:p-8 #:p-9 #:p-9-m #:p-10
@@ -69,7 +69,7 @@
 		,@target-after-end)))
 
 (defun read-lines (path)
-  (with-open-file (s path)
+  (with-open-file (s path :external-format :UTF-8)
 	(loop for line = (read-line s nil)
 	   while line
 	   collect line)))
@@ -218,18 +218,65 @@
   (let* ((two-lst (mapcar #'(lambda (x) (let ((sp (ppcre:split "\\t" x)))
 										  (cons (car sp) (car (cdr sp)))))
 						  (read-lines path))))
-	(with-open-file (s o-path-1 :direction :output)
+	(with-open-file (s o-path-1 :direction :output :external-format :UTF-8)
 	  (format s  "~{~A~^~%~}" (mapcar #'car two-lst)))
-	(with-open-file (s o-path-2 :direction :output)
+	(with-open-file (s o-path-2 :direction :output :external-format :UTF-8)
 	  (format s  "~{~A~^~%~}" (mapcar #'cdr two-lst)))))
 
 ;;; 13
 (defun p-13 (o-path sep i-path-1 i-path-2)
-  (with-open-file (s o-path :direction :output)
+  (with-open-file (s o-path :direction :output :external-format :UTF-8)
 	(format s "~{~A~^~%~}" (mapcar #'(lambda (x y)
 									   (concatenate 'string x sep y))
 								   (read-lines i-path-1)
 								   (read-lines i-path-2)))))
 
+;;; 14
 (defun p-14 (path n)
   (format nil "~{~A~^~&~}" (take (read-lines path) n)))
+
+;;; 15
+(defun p-15 (path n)
+  (format nil "~{~A~^~&~}" (reverse (take (reverse (read-lines path)) n))))
+
+;;; 16
+;;; かなり怪しい。
+(defun p-16 (i-path part-n)
+  (labels ((w (str tk n)
+			 (cond ((not (< (length str) n))
+					(with-open-file (s (concatenate 'string
+													   i-path
+													   (write-to-string n))
+										  :direction :output
+										  :external-format :UTF-8)
+						 (format s "~A" (subseq str 0 tk)))
+						(w (subseq str tk) tk (1+ n))))))
+	(let ((contents (slurp i-path)))
+	  (w contents (ceiling (length contents) part-n) 0))))
+
+;;; 17
+(defun p-17 (path col &optional (sep-rex "\\t"))
+  (let* ((one-col-lst (mapcar #'(lambda (x) (nth col (ppcre:split sep-rex x)))
+							  (read-lines path))))
+	(format nil  "~{~A~^~%~}" (sort (remove-duplicates one-col-lst :test #'string=) #'string<))))
+
+;;; 18
+(defun p-18 (path sort-col)
+  (format nil  "~{~A~^~%~}"
+		  (sort (read-lines path)
+				#'>=
+				:key #'(lambda (x)
+						 (parse-float:parse-float (nth sort-col
+													   (ppcre:split "\\t" x)))))))
+
+;;; 19
+(defun p-19 (path col)
+  (let* ((one-cols (mapcar #'(lambda (x) (nth col (ppcre:split "\\t" x)))
+						   (read-lines path)))
+		 (one-uniq-cnt-cols (mapcar #'(lambda (x)
+										(cons (count x one-cols :test #'string=)
+											  x))
+									(remove-duplicates one-cols :test #'string=))))
+	(format nil  "~{~A~^~%~}"
+			(mapcar #'(lambda (x) (format nil "~A ~A" (car x) (cdr x)))
+					(sort one-uniq-cnt-cols #'> :key #'car)))))
