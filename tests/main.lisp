@@ -2,6 +2,7 @@
   (:use :cl
         :cl-nlp-100
 		:cl-ppcre
+		:gzip-stream
         :rove))
 (in-package :cl-nlp-100/tests/main)
 
@@ -162,3 +163,15 @@
 	  ;; 		   (ok (string= (cl-nlp-100:p-19 "./files/hightemp.txt" 0)
 	  ;; 						(cl-nlp-100:slurp "files/cmd_1_count_sort.txt"))))
 	  ))
+
+(deftest act-3
+  ;; ここ妥協
+  (when (not (probe-file "./files/act3.json"))
+	(cl-nlp-100:download-file "./files/act3.json.gz"
+							  "http://www.cl.ecei.tohoku.ac.jp/nlp100/data/jawiki-country.json.gz")
+	(gzip-stream:gunzip "./files/act3.json.gz" "./files/act3.json"))
+  (print (cl-nlp-100:p-20 "./files/act3.json" "イギリス" "./files/english_contents.txt"))
+  ;; (testing "problem 20"
+  ;; 	(string= (cl-nlp-100:slurp "./files/p-20.json")
+  ;; 			 (cl-nlp-100:slurp "./files/english_contents.txt")))
+  )

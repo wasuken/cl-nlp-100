@@ -1,5 +1,5 @@
 (defpackage cl-nlp-100
-  (:use :cl :cl-ppcre :parse-float)
+  (:use :cl :cl-ppcre :parse-float :drakma :json-parser)
   ;; ここ最高にゴミでは。
   (:export #:p-0 #:p-1 #:p-2 #:p-3 #:p-4 #:p-5 #:p-6-1 #:p-6-2 #:p-6-3 #:p-6-4
 		   #:p-7 #:p-8 #:p-9 #:p-9-m #:p-10
@@ -13,8 +13,7 @@
 		   #:p-81 #:p-82 #:p-83 #:p-84 #:p-85 #:p-86 #:p-87 #:p-88 #:p-89 #:p-90
 		   #:p-91 #:p-92 #:p-93 #:p-94 #:p-95 #:p-96 #:p-97 #:p-98 #:p-99
 		   #:p-100
-		   #:read-lines
-		   #:slurp))
+		   #:download-file #:read-lines #:slurp #:gzip-stream #:cl-json))
 (in-package :cl-nlp-100)
 
 ;;; Common
@@ -76,6 +75,17 @@
 
 (defun slurp (path)
   (format nil "~{~A~^~&~}" (read-lines path)))
+
+;;; https://lisphub.jp/common-lisp/cookbook/index.cgi?%E7%89%B9%E5%AE%9A%E3%81%AEURL%E3%81%8B%E3%82%89%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%82%92%E3%83%80%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%89%E3%81%99%E3%82%8B
+(defun download-file (filename uri)
+  (with-open-file (out filename
+					   :direction :output
+					   :if-exists :supersede
+					   :element-type '(unsigned-byte 8))
+    (with-open-stream (input (drakma:http-request uri :want-stream t :connection-timeout nil))
+      (loop :for b := (read-byte input nil -1)
+		 :until (minusp b)
+		 :do (write-byte b out)))))
 
 ;;; Problems
 
@@ -280,3 +290,10 @@
 	(format nil  "~{~A~^~%~}"
 			(mapcar #'(lambda (x) (format nil "~A ~A" (car x) (cdr x)))
 					(sort one-uniq-cnt-cols #'> :key #'car)))))
+
+;;; 20
+(defun p-20 (i-path title o-path)
+  (find t (mapcar #'(lambda (x)
+					  (json-parser:parse x))
+				  (read-lines i-path))
+		:key #'(lambda (x) (find title x :test #'string= :key #'car))))

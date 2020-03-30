@@ -2,7 +2,7 @@
   :version "0.1.0"
   :author ""
   :license ""
-  :depends-on ("cl-ppcre" "parse-float")
+  :depends-on ("cl-ppcre" "parse-float" "drakma" "gzip-stream" "json-parser")
   :components ((:module "src"
                 :components
                 ((:file "main"))))
